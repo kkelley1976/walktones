@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" 
+	android:shrinkColumns="1" 
+	android:layout_height="fill_parent">
+			<TableRow android:padding="2dip">
+				<TextView android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/placelabel"
+					android:text="@string/place" />
+				<TextView android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/place"
+					android:text="@string/unknown" />
+			</TableRow>
+			<TableRow 
+				android:padding="2dip">
+				<TextView android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/resultslabel"
+					android:text="@string/environment" />
+				<ScrollView android:id="@+id/ScrollView01"
+					android:layout_width="wrap_content" 
+					android:layout_height="wrap_content">
+					<TextView android:layout_width="wrap_content"
+						android:layout_height="wrap_content" android:id="@+id/textStatus"
+						android:text="@string/unknown" />
+				</ScrollView>
+			</TableRow>
+			<View android:layout_height="2dip" android:background="#FF909090" />
+			<TableRow>
+				<Button android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/namer"
+					android:text="@string/name"></Button>
+				<Button android:layout_width="wrap_content" 
+					android:layout_height="wrap_content" 
+					android:id="@+id/assign" android:text="@string/assign"></Button>
+			</TableRow>
+			<TableRow>
+				<Button android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/confirm"
+					android:text="@string/confirm">
+				</Button>			
+				<Button android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/correct"
+					android:text="@string/correct">
+				</Button>
+			</TableRow>
+
+			<!-- <Button android:layout_width="wrap_content" android:layout_height="wrap_content" 
+				android:id="@+id/home" android:text="Name this Home"></Button> -->
+
+			<View android:layout_height="2dip" android:padding="2dip"
+				android:background="#FF909090" />
+			<TableRow 
+				android:orientation="horizontal" android:layout_width="fill_parent"
+				android:layout_height="wrap_content" android:layout_weight="1">
+				<TextView android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/debuglabel"
+					android:text="@string/debug" />
+</TableRow>
+			<TableRow android:padding="2dip">
+				<TextView android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/placeslabel"
+					android:text="@string/places" />
+				<TextView android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/places"
+					android:text="@string/unknown" />
+			</TableRow>
+			<TableRow android:padding="2dip">
+				<TextView android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/loglabel"
+					android:text="@string/log" />
+				<TextView android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/log"
+					android:text="@string/walktonesstarted" />
+			</TableRow>
+			<TableRow android:padding="2dip">
+				<TextView android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/propertieslabel"
+					android:text="@string/properties" />
+				<TextView android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/properties"
+					android:text="@string/unknown" />
+			</TableRow>
+<TableRow> 
+				<Button android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/buttonScan"
+					android:text="@string/scan"></Button>
+				<Button android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/recognize"
+					android:text="@string/recognize"></Button>
+<!-- </TableRow><TableRow>
+				<Button android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/debug"
+					android:text="Debug"></Button>-->
+</TableRow><TableRow>					
+				<Button android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/update"
+					android:text="@string/update"></Button>
+				<Button android:layout_width="wrap_content"
+					android:layout_height="wrap_content" android:id="@+id/wipe"
+					android:text="@string/wipe"></Button>
+</TableRow>
+</TableLayout>

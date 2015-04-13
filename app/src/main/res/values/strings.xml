@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Walktones</string>
+    <string name="unknown">[unknown]</string>
+    <string name="place">Place: </string>
+    <string name="environment">Environment: </string>
+    <string name="name">Name</string>
+    <string name="assign">Assign</string>
+    <string name="confirm">Confirm</string>
+    <string name="correct">Correct</string>
+    <string name="debug">Debug: </string>
+    <string name="places">Places: </string>
+    <string name="update">Update</string>
+    <string name="recognize">Recognize</string>
+    <string name="log">Log: </string>
+    <string name="walktonesstarted">Walktones started. </string>
+    <string name="properties">Properties: </string>
+    <string name="scan">Scan</string>
+    <string name="wipe">Wipe</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_quit">Quit</string>
+</resources>
