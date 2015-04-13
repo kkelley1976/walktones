@@ -24,6 +24,19 @@
 						android:text="@string/unknown" />
 				</ScrollView>
 			</TableRow>
+    <TableRow
+        android:padding="2dip">
+        <TextView android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/maglabel"
+            android:text="@string/maglabel" />
+        <ScrollView android:id="@+id/ScrollView01"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <TextView android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:id="@+id/magStatus"
+                android:text="@string/unknown" />
+        </ScrollView>
+    </TableRow>
 			<View android:layout_height="2dip" android:background="#FF909090" />
 			<TableRow>
 				<Button android:layout_width="wrap_content"

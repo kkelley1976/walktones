@@ -4,6 +4,7 @@
     <string name="unknown">[unknown]</string>
     <string name="place">Place: </string>
     <string name="environment">Environment: </string>
+    <string name="maglabel">Magno</string>
     <string name="name">Name</string>
     <string name="assign">Assign</string>
     <string name="confirm">Confirm</string>

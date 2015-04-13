@@ -103,6 +103,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -137,6 +139,8 @@ public class WalktoneScanner extends Activity implements OnClickListener, Locati
 	Recognizer recognizer = null;
 	public String name = "";
 	public String cname="";
+    SensorManager sm;
+
 
 	CharSequence placetoassignto;
 
@@ -228,6 +232,19 @@ public class WalktoneScanner extends Activity implements OnClickListener, Locati
 		Intent serviceIntent = new Intent();
 		serviceIntent.setAction("com.deadofnight.service.WalktoneService");
 		startService(serviceIntent);
+
+        //magnometer sensors
+        SensorManager sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+
+        sm.registerListener(receiver,
+                sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+                SensorManager.SENSOR_DELAY_UI);
+        sm.registerListener(receiver,
+                sm.getDefaultSensor(Sensor.TYPE_GRAVITY),
+                SensorManager.SENSOR_DELAY_UI);
+
+
+
 
 		threadHandler.hasMessages(0);
 		Log.d(TAG, "onCreate()");
