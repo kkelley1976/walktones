@@ -317,6 +317,11 @@ Log.w(TAG,"nameplace latitude");
 			for (ScanResult result : antennas) { // using antennas crashes it
 				addAntenna(result, name);
 			}
+        if (WalktoneScanner.mSumGeomagnetic_W_avg != null) {
+            addMagx(name);
+            addMagy(name);
+            addMagz(name);
+        }
 	}
 
 	void showCounts() {
@@ -327,6 +332,51 @@ Log.w(TAG,"nameplace latitude");
 				"";
 		Toast.makeText(context, buff, Toast.LENGTH_SHORT).show();
 	}
+
+    public void addMagx(String name) {
+        long rowid = placeId(name);
+        ContentValues values4 = new ContentValues(3);
+        values4.put("antenna", "ax");
+        values4.put("power", WalktoneScanner.mSumGeomagnetic_W_avg[0]);
+        values4.put("type", "mag");
+        long rowid4 = this.db.insert("property", null, values4);
+
+        ContentValues values5 = new ContentValues(2);
+        values5.put("propertyid", rowid4);
+        values5.put("placeid", rowid);
+        // long rowid5=
+        this.db.insert("place2property", "propertyid", values5);
+    }
+
+    public void addMagy(String name) {
+        long rowid = placeId(name);
+        ContentValues values4 = new ContentValues(3);
+        values4.put("antenna", "ax");
+        values4.put("power", WalktoneScanner.mSumGeomagnetic_W_avg[1]);
+        values4.put("type", "mag");
+        long rowid4 = this.db.insert("property", null, values4);
+
+        ContentValues values5 = new ContentValues(2);
+        values5.put("propertyid", rowid4);
+        values5.put("placeid", rowid);
+        // long rowid5=
+        this.db.insert("place2property", "propertyid", values5);
+    }
+
+    public void addMagz(String name) {
+        long rowid = placeId(name);
+        ContentValues values4 = new ContentValues(3);
+        values4.put("antenna", "ax");
+        values4.put("power", WalktoneScanner.mSumGeomagnetic_W_avg[2]);
+        values4.put("type", "mag");
+        long rowid4 = this.db.insert("property", null, values4);
+
+        ContentValues values5 = new ContentValues(2);
+        values5.put("propertyid", rowid4);
+        values5.put("placeid", rowid);
+        // long rowid5=
+        this.db.insert("place2property", "propertyid", values5);
+    }
 
 	public void addAntenna(ScanResult result, String name) {
 		long rowid = placeId(name);
@@ -357,12 +407,13 @@ Log.w(TAG,"nameplace latitude");
 		return count;
 	}
 
+    /*
 	// given an antenna, see if it matches any records we have
 	// doubt I'm using this anywhere and not sure why I would
 	public long antennaMatches(ScanResult antenna) {
 		Cursor cur = this.db.rawQuery(
 				"select placeid from place2property,property"
-						+ " where type='wifi' "
+						+ " where type='wifi'"
 						+ " and property.propertyid=place2property.propertyid "
 						+ " and property.antenna='" + antenna.BSSID + "'"
 						+ " and property.power>=" + (antenna.level - precision)
@@ -393,7 +444,7 @@ Log.w(TAG,"nameplace latitude");
 		}
 		return count;
 	}
-
+*/
 	// okay, so it matches a bunch of entries
 	// how many antennas do i match? who cares
 	// how many places do i match? i care a little more
@@ -553,7 +604,7 @@ Log.w(TAG,"nameplace latitude");
 		String sql =
 			"select antenna, power from"+
 			" property,place2property"+
-			" where type='wifi'"+
+			" where (type='wifi' or type='mag')"+
 			" and property.propertyid=place2property.propertyid "+
 			" and place2property.placeid="+plid;
 		if (alg2weight>0) {

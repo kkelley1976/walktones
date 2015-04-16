@@ -37,6 +37,32 @@
                 android:text="@string/unknown" />
         </ScrollView>
     </TableRow>
+    <TableRow
+    android:padding="2dip">
+    <TextView android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:id="@+id/magworld"
+        android:text="@string/magworld" />
+    <ScrollView android:id="@+id/ScrollView01"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <TextView android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/magwStatus"
+            android:text="@string/unknown" />
+    </ScrollView>
+    </TableRow>
+    <TableRow
+        android:padding="2dip">
+        <TextView android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:id="@+id/magavg"
+            android:text="@string/magavg" />
+        <ScrollView android:id="@+id/ScrollView01"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <TextView android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:id="@+id/magaStatus"
+                android:text="@string/unknown" />
+        </ScrollView>
+    </TableRow>
 			<View android:layout_height="2dip" android:background="#FF909090" />
 			<TableRow>
 				<Button android:layout_width="wrap_content"
