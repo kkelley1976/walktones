@@ -1178,7 +1178,7 @@ Log.w(TAG,"standard deviation "+stddev);
                 + " and property.antenna='" + axis + "'"
                 + " and place2property.placeid=" + id
                 + "";
-/*
+/* this was to test if it was all zeroes
         sql = "select "
                 + " avg(property.power) "
                 + " from property,place2property"
