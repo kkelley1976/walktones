@@ -48,9 +48,10 @@ public class dbcon extends SQLiteOpenHelper {
 	private static final String TABLE_NAME = "place";
 	public int precision = 15; //just how close to an RSSI do we consider a match
 	//day after a tornado 10 didn't work well
-	//weather probably has nothing to do with it
+	//but weather probably has nothing to do with it
+    //my php tests suggest 12 is the best number
 
-	public double threshold = 0.20; //what percentage of a score is a match
+	public double threshold = 0.20; //what "percentage" of a score is a match
 	//40% match is too high for some of these algorithms
 	
 	//path depends on phone
@@ -82,12 +83,14 @@ public class dbcon extends SQLiteOpenHelper {
 	}
 
 	public void onOpen(SQLiteDatabase mdb) {
-		// onCreate(mdb);
 		//during development i sometimes want to start fresh every launch
-		// mdb.execSQL("DROP TABLE IF EXISTS place");
-		// mdb.execSQL("DROP TABLE IF EXISTS PLACE2PROPERTY");
-		// mdb.execSQL("DROP TABLE IF EXISTS PROPERTY");
-	}
+		 mdb.execSQL("DROP TABLE IF EXISTS place");
+		 mdb.execSQL("DROP TABLE IF EXISTS PLACE2PROPERTY");
+		 mdb.execSQL("DROP TABLE IF EXISTS PROPERTY");
+        //seems like it should drop before cfeating
+        onCreate(mdb);
+
+    }
 
 	@Override
 	public void onCreate(SQLiteDatabase mdb) {
@@ -174,7 +177,7 @@ public class dbcon extends SQLiteOpenHelper {
     /**
      * Copies your database from your local assets-folder to the just created empty database in the
      * system folder, from where it can be accessed and handled.
-     * This is done by transfering bytestream.
+     * This is done by transferring bytestream.
      * */
     private void copyDataBase() throws IOException{
  
@@ -318,17 +321,21 @@ Log.w(TAG,"nameplace latitude");
 				addAntenna(result, name);
 			}
         if (WalktoneScanner.mSumGeomagnetic_W_avg != null) {
+            Log.w(TAG,"before magnetic properties added");
             addMagx(name);
             addMagy(name);
             addMagz(name);
+            Log.w(TAG,"after magnetic properties added");
         }
-	}
+        Log.w(TAG,"after magnetic properties should have been added");
+    }
 
 	void showCounts() {
 		String buff = "" + "there are " + placeCount() + " places defined"
 				+ " and " + propertyCount() + " properties" + " and "
 				+ relationCount() + " relations" +
 				// " and "+antennaCount(name)+" antennas at "+name+
+                //separate wifi and mag count
 				"";
 		Toast.makeText(context, buff, Toast.LENGTH_SHORT).show();
 	}
@@ -337,7 +344,7 @@ Log.w(TAG,"nameplace latitude");
         long rowid = placeId(name);
         ContentValues values4 = new ContentValues(3);
         values4.put("antenna", "ax");
-        values4.put("power", WalktoneScanner.mSumGeomagnetic_W_avg[0]);
+        values4.put("power", (int)WalktoneScanner.mSumGeomagnetic_W_avg[0]);
         values4.put("type", "mag");
         long rowid4 = this.db.insert("property", null, values4);
 
@@ -352,9 +359,11 @@ Log.w(TAG,"nameplace latitude");
         long rowid = placeId(name);
         ContentValues values4 = new ContentValues(3);
         values4.put("antenna", "ax");
-        values4.put("power", WalktoneScanner.mSumGeomagnetic_W_avg[1]);
+        values4.put("power", (int)WalktoneScanner.mSumGeomagnetic_W_avg[1]);
         values4.put("type", "mag");
         long rowid4 = this.db.insert("property", null, values4);
+
+        Log.w(TAG,"magnetic y before add "+values4.get("power"));
 
         ContentValues values5 = new ContentValues(2);
         values5.put("propertyid", rowid4);
@@ -364,10 +373,11 @@ Log.w(TAG,"nameplace latitude");
     }
 
     public void addMagz(String name) {
+        Log.w(TAG,"before magnetic x should have been added");
         long rowid = placeId(name);
         ContentValues values4 = new ContentValues(3);
         values4.put("antenna", "ax");
-        values4.put("power", WalktoneScanner.mSumGeomagnetic_W_avg[2]);
+        values4.put("power", (int)(WalktoneScanner.mSumGeomagnetic_W_avg[2]));
         values4.put("type", "mag");
         long rowid4 = this.db.insert("property", null, values4);
 
@@ -376,6 +386,7 @@ Log.w(TAG,"nameplace latitude");
         values5.put("placeid", rowid);
         // long rowid5=
         this.db.insert("place2property", "propertyid", values5);
+        Log.w(TAG,"after magnetic x should have been added");
     }
 
 	public void addAntenna(ScanResult result, String name) {
@@ -544,7 +555,7 @@ Log.w(TAG,"nameplace latitude");
 		//apart from weights, some of these methods work better with
 		//different numbers of samples, different thresholds, different precision
 		double alg1weight=0.0; //all observed vs all possible
-		double alg2weight=1.0; //all possible vs observed
+		double alg2weight=0.0; //all possible vs observed
 		double alg3weight=0.0; //observed vs average
 		double alg4weight=0.0; //proximity
 		double alg5weight=0.0; //k strongest antennas
@@ -553,8 +564,9 @@ Log.w(TAG,"nameplace latitude");
 		double alg8weight=0.0; //difference code 1
 		double alg9weight=0.0; //difference code 2
 		double alg10weight=0.0; //standard deviation
-		
-		//original well functioning block
+        double alg11weight=1.0; //magnetic
+
+        //original well functioning block
 		//compare all observed antennas vs all possible antennas
 		//originally used an absolute score based on how close each
 		//nearby antenna matched any and all expected ones
@@ -832,6 +844,22 @@ Log.w(TAG,"nameplace latitude");
 					score+=temp*alg10weight*precision;
 			}
 		//Log.w(TAG,"place "+name+" has "+antennaCount(name)+" properties");
+
+        //magnetic code
+        int mdiff=100;
+        if (alg11weight>0) {
+            //compare current average to stored averages
+            maxscore+=300*alg11weight;
+            int magx=magexpavgatPlace("x", name);
+            int magy=magexpavgatPlace("y", name);
+            int magz=magexpavgatPlace("z", name);
+            score+=(100-Math.abs(WalktoneScanner.mSumGeomagnetic_W_avg[0]-magx))*alg11weight*precision;
+            score+=(100-Math.abs(WalktoneScanner.mSumGeomagnetic_W_avg[1]-magy))*alg11weight*precision;
+            score+=(100-Math.abs(WalktoneScanner.mSumGeomagnetic_W_avg[2]-magz))*alg11weight*precision;
+            //TODO: output differences and originals
+            Log.w(TAG, "magx_e " + magx +" magy_e " + magy+ " magz_e " + magz);
+            Log.w(TAG, "magx_o " + WalktoneScanner.mSumGeomagnetic_W_avg[0] +" magy_o " + WalktoneScanner.mSumGeomagnetic_W_avg[1]+ " magz_o " + WalktoneScanner.mSumGeomagnetic_W_avg[2]);
+        }
 
 		if (score>0)  Log.w(TAG, score + "/" + maxscore + " match to " + name);
 		if (score > ((maxscore) * threshold)) { //match
@@ -1138,5 +1166,41 @@ Log.w(TAG,"standard deviation "+stddev);
        //Log.w(TAG, "Upgrading database, this will drop tables and recreate.");
        //db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
        //onCreate(db);
+    }
+
+    public int magexpavgatPlace(String axis, String name) {
+        long id = placeId(name);
+        String sql = "select "
+                + " avg(property.power) "
+                + " from property,place2property"
+                + " where type='mag'"
+                + " and property.propertyid=place2property.propertyid "
+                + " and property.antenna='" + axis + "'"
+                + " and place2property.placeid=" + id
+                + "";
+/*
+        sql = "select "
+                + " avg(property.power) "
+                + " from property,place2property"
+                + " where type='mag'"
+                + " and property.propertyid=place2property.propertyid "
+                + " and place2property.placeid=" + id
+                + ""; // -1 instead of 0
+*/
+        Cursor cur = this.db.rawQuery(sql, null);
+        int count = cur.getCount();
+        int expected=0;
+        Log.w(TAG,"magnetic property count "+count);
+
+        if (count > 0) {
+            cur.moveToFirst();
+            expected=cur.getInt(0);
+        }
+        Log.w(TAG,"magnetic expected "+" "+axis+" "+expected);
+
+        if (cur != null && !cur.isClosed()) {
+            cur.close();
+        }
+        return expected;
     }
 }

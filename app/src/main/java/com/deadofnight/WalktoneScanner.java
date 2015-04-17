@@ -614,13 +614,12 @@ So you should read from Sensor.TYPE_ACCELEROMETER as well as from Sensor.TYPE_MA
 
             //newstr = newstr.concat(String.format("world magnetic field\nx: %f\ny:%f\nz:%f",
             //        new Object[]{mGeomagnetic_W[0], mGeomagnetic_W[1], mGeomagnetic_W[2]}));
-//TODO: accumulate sum and set avg here if this is a magnetic field thing
             magneticcount++;
             String buff="";
             if (magneticcount < 150) {
-                mSumGeomagnetic_W[0]+=mGeomagnetic[0];
-                mSumGeomagnetic_W[1]+=mGeomagnetic[1];
-                mSumGeomagnetic_W[2]+=mGeomagnetic[2];
+                mSumGeomagnetic_W[0]+=mGeomagnetic_W[0];
+                mSumGeomagnetic_W[1]+=mGeomagnetic_W[1];
+                mSumGeomagnetic_W[2]+=mGeomagnetic_W[2];
                 buff=String.format("x:  %f  y:%f  z:%f",
                                new Object[]{mGeomagnetic[0], mGeomagnetic[1], mGeomagnetic[2]});
                 TextView bob = (TextView) this
@@ -636,9 +635,12 @@ So you should read from Sensor.TYPE_ACCELEROMETER as well as from Sensor.TYPE_MA
                 mSumGeomagnetic_W_avg[0]=mSumGeomagnetic_W[0]/150;
                 mSumGeomagnetic_W_avg[1]=mSumGeomagnetic_W[1]/150;
                 mSumGeomagnetic_W_avg[2]=mSumGeomagnetic_W[2]/150;
+                mSumGeomagnetic_W[0]=0;
+                mSumGeomagnetic_W[1]=0;
+                mSumGeomagnetic_W[2]=0;
                 magneticcount=0;
                 buff=String.format("ax: %f  ay:%f az:%f",
-                              new Object[]{mGeomagnetic_W[0], mGeomagnetic_W[1], mGeomagnetic_W[2]});
+                              new Object[]{mSumGeomagnetic_W_avg[0], mSumGeomagnetic_W_avg[1], mSumGeomagnetic_W_avg[2]});
                     TextView bob = (TextView) this
                             .findViewById(R.id.magaStatus);
                     bob.setText(buff);
