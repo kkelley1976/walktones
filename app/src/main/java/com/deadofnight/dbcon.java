@@ -25,10 +25,13 @@ package com.deadofnight;
 //   30 samples per location
 //   but really it's completely implementation dependent
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 import android.content.ContentValues;
@@ -39,6 +42,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.wifi.ScanResult;
+import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -56,7 +60,7 @@ public class dbcon extends SQLiteOpenHelper {
 	
 	//path depends on phone
 	// private static String DB_PATH = "/data/data/com.deadofnight/databases/";
-	private static String DB_PATH = "/Android/data/com.deadofnight/files/";
+	private static String DB_PATH = "/data/data/com.deadofnight/databases/";
 	//above caused file access error. not sure what path should be.
 
 	private static String DB_NAME = "placedb";
@@ -66,7 +70,8 @@ public class dbcon extends SQLiteOpenHelper {
 	dbcon(Context context, WalktoneScanner WalktoneScanner) {
 		super(context, DB_NAME, null, 3);
 		db = this.getWritableDatabase(); //opens a private database
-
+Log.w(TAG,"the database path:"+db.getPath());
+        //the database path:/data/data/com.deadofnight/databases/placedb
 		/* creates and opens a public database
 		 * not worth the effort to make it work right now
 		 * only reason to do it is for convenience
@@ -196,7 +201,7 @@ public class dbcon extends SQLiteOpenHelper {
     	while ((length = myInput.read(buffer))>0){
     		myOutput.write(buffer, 0, length);
     	}
- 
+ Log.w(TAG,"using copy database to create database");
     	//Close the streams
     	myOutput.flush();
     	myOutput.close();
@@ -206,6 +211,8 @@ public class dbcon extends SQLiteOpenHelper {
     public void openDataBase() throws SQLException{
         String myPath = DB_PATH + DB_NAME;
     	db = SQLiteDatabase.openDatabase(myPath, null, SQLiteDatabase.OPEN_READONLY);
+        Log.w(TAG,"using open database to create database");
+
     }
 	/* end the stuff that allows me to have a public database */
 	
@@ -328,6 +335,7 @@ Log.w(TAG,"nameplace latitude");
             Log.w(TAG,"after magnetic properties added");
         }
         Log.w(TAG,"after magnetic properties should have been added");
+        exportDB(name);
     }
 
 	void showCounts() {
@@ -343,10 +351,14 @@ Log.w(TAG,"nameplace latitude");
     public void addMagx(String name) {
         long rowid = placeId(name);
         ContentValues values4 = new ContentValues(3);
-        values4.put("antenna", "ax");
+        values4.put("antenna", "awx");
+        Log.w(TAG,"about to add values4.magx: "+(int)WalktoneScanner.mSumGeomagnetic_W_avg[0]);
+
         values4.put("power", (int)WalktoneScanner.mSumGeomagnetic_W_avg[0]);
         values4.put("type", "mag");
         long rowid4 = this.db.insert("property", null, values4);
+        Log.w(TAG,"values4.magx: "+values4.toString());
+
 
         ContentValues values5 = new ContentValues(2);
         values5.put("propertyid", rowid4);
@@ -358,17 +370,54 @@ Log.w(TAG,"nameplace latitude");
     public void addMagy(String name) {
         long rowid = placeId(name);
         ContentValues values4 = new ContentValues(3);
-        values4.put("antenna", "ax");
+        values4.put("antenna", "awy");
         values4.put("power", (int)WalktoneScanner.mSumGeomagnetic_W_avg[1]);
-        values4.put("type", "mag");
-        long rowid4 = this.db.insert("property", null, values4);
+        Log.w(TAG,"about to add values4.magy: "+(int)WalktoneScanner.mSumGeomagnetic_W_avg[1]);
 
+        values4.put("type", "mag");
+        Log.w(TAG,"values4.magy: "+values4.toString());
+
+        long rowid4 = this.db.insert("property", null, values4);
         Log.w(TAG,"magnetic y before add "+values4.get("power"));
+
+        //begin debug sql block
+        long id = placeId(name);
+        String
+        sql = "select "
+                + " property.power "
+                + " from property,place2property"
+                + " where type='mag'"
+                + " and property.propertyid=place2property.propertyid "
+                + " and property.antenna='" + "awy" + "'"
+                + " and place2property.placeid=" + id
+                + " order by power desc";
+
+        Log.w(TAG,sql);
+        Cursor cur = this.db.rawQuery(sql, null);
+        int count = cur.getCount();
+        int expected=0;
+        Log.w(TAG,"just after insert magnpropcount "+" axis "+"y"+" "+count);
+
+        if (count > 0) { //not happening
+            cur.moveToFirst();
+            expected=cur.getInt(0);
+            cur.moveToFirst();
+            Log.w(TAG,"magnetic instance "+" "+cur.getString(0));
+
+        }
+        Log.w(TAG,"magnetic expected "+" "+"yy"+" "+expected);
+
+        if (cur != null && !cur.isClosed()) {
+            cur.close();
+        }
+        //end debug block
 
         ContentValues values5 = new ContentValues(2);
         values5.put("propertyid", rowid4);
         values5.put("placeid", rowid);
         // long rowid5=
+        Log.w(TAG,"values5.magyrelation: "+values5.toString());
+
         this.db.insert("place2property", "propertyid", values5);
     }
 
@@ -376,7 +425,7 @@ Log.w(TAG,"nameplace latitude");
         Log.w(TAG,"before magnetic x should have been added");
         long rowid = placeId(name);
         ContentValues values4 = new ContentValues(3);
-        values4.put("antenna", "ax");
+        values4.put("antenna", "awz");
         values4.put("power", (int)(WalktoneScanner.mSumGeomagnetic_W_avg[2]));
         values4.put("type", "mag");
         long rowid4 = this.db.insert("property", null, values4);
@@ -850,13 +899,13 @@ Log.w(TAG,"nameplace latitude");
         if (alg11weight>0) {
             //compare current average to stored averages
             maxscore+=300*alg11weight;
-            int magx=magexpavgatPlace("x", name);
-            int magy=magexpavgatPlace("y", name);
-            int magz=magexpavgatPlace("z", name);
+            int magx=magexpavgatPlace("awx", name);
+            int magy=magexpavgatPlace("awy", name);
+            int magz=magexpavgatPlace("awz", name);
             score+=(100-Math.abs(WalktoneScanner.mSumGeomagnetic_W_avg[0]-magx))*alg11weight*precision;
             score+=(100-Math.abs(WalktoneScanner.mSumGeomagnetic_W_avg[1]-magy))*alg11weight*precision;
             score+=(100-Math.abs(WalktoneScanner.mSumGeomagnetic_W_avg[2]-magz))*alg11weight*precision;
-            //TODO: output differences and originals
+
             Log.w(TAG, "magx_e " + magx +" magy_e " + magy+ " magz_e " + magz);
             Log.w(TAG, "magx_o " + WalktoneScanner.mSumGeomagnetic_W_avg[0] +" magy_o " + WalktoneScanner.mSumGeomagnetic_W_avg[1]+ " magz_o " + WalktoneScanner.mSumGeomagnetic_W_avg[2]);
         }
@@ -1178,6 +1227,17 @@ Log.w(TAG,"standard deviation "+stddev);
                 + " and property.antenna='" + axis + "'"
                 + " and place2property.placeid=" + id
                 + "";
+/*
+        sql = "select "
+                + " property.power "
+                + " from property,place2property"
+                + " where type='mag'"
+                + " and property.propertyid=place2property.propertyid "
+                + " and property.antenna='" + axis + "'"
+                + " and place2property.placeid=" + id
+                + " order by power desc";
+                */
+        Log.w(TAG,sql);
 /* this was to test if it was all zeroes
         sql = "select "
                 + " avg(property.power) "
@@ -1190,11 +1250,14 @@ Log.w(TAG,"standard deviation "+stddev);
         Cursor cur = this.db.rawQuery(sql, null);
         int count = cur.getCount();
         int expected=0;
-        Log.w(TAG,"magnetic property count "+count);
+        Log.w(TAG,"magnetic property count "+" axis "+axis+" "+count);
 
         if (count > 0) {
             cur.moveToFirst();
             expected=cur.getInt(0);
+            cur.moveToFirst();
+            Log.w(TAG,"magnetic expected "+" "+cur.getString(0));
+
         }
         Log.w(TAG,"magnetic expected "+" "+axis+" "+expected);
 
@@ -1203,4 +1266,51 @@ Log.w(TAG,"standard deviation "+stddev);
         }
         return expected;
     }
+
+    //adb -d shell
+    //but first, adb -s emulator-5554 pull /system/xbin/sqlite3 . //its only on emulators
+    //adb -d push sqlite3 /data/local/tmp/
+    //adb -d shell
+    //cd /data/local/tmp/
+    //chmod 777 sqlite3
+    // ./sqlite3 /data/data/com.deadofnight/files/placedb
+    //probably only works on rooted devices
+    //http://forum.xda-developers.com/showthread.php?t=1817246
+    //http://developer.android.com/tools/help/sqlite3.html
+
+/* doesn't work out of the box */
+    private void exportDB(String name){
+        File sd = Environment.getExternalStorageDirectory();
+        File data = Environment.getDataDirectory();
+        FileChannel source=null;
+        FileChannel destination=null;
+        //String currentDBPath = "/data/"+ "com.deadofnight.walktones" +"/databases/"+"name.export.sqlite";
+        //String currentDBPath="/data/com.deadofnight/databases/"+"placedb";
+        //java.io.FileNotFoundException: /data/data/data/com.deadofnight/databases/placedb: open failed: ENOENT (No such file or directory)
+    //it prepends an extra /data
+        String currentDBPath="/data/com.deadofnight/databases/placedb";
+        //TODO: add permission to write to sdcard and get path right
+        File sdDir = Environment.getExternalStorageDirectory();
+        Log.w(TAG,"absolute path of external storage: "+sdDir.getAbsolutePath());
+        //absolute path of external storage: /storage/emulated/0 according to function call but not valid according to adb shell
+        //<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+        //String backupDBPath = sdDir.getAbsolutePath()+"/"+name+".export.sqlite";
+        String backupDBPath = "/storage/extSdCard/"+name+".export.sqlite";
+
+        File currentDB = new File(data, currentDBPath);
+        File backupDB = new File(sd, backupDBPath);
+        try {
+            source = new FileInputStream(currentDB).getChannel();
+            destination = new FileOutputStream(backupDB).getChannel();
+            destination.transferFrom(source, 0, source.size());
+            source.close();
+            destination.close();
+            //Toast.makeText(this, "DB Exported!", Toast.LENGTH_LONG).show();
+            Log.w(TAG,"database successfully exported to sdcard");
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+        Log.w(TAG,"after database exported to sdcard");
+    }
+
 }
