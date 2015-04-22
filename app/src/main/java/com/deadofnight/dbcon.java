@@ -603,7 +603,7 @@ Log.w(TAG,"nameplace latitude");
 		//while mitigating the drawbacks
 		//apart from weights, some of these methods work better with
 		//different numbers of samples, different thresholds, different precision
-		double alg1weight=0.0; //all observed vs all possible
+		double alg1weight=0.1; //all observed vs all possible
 		double alg2weight=0.0; //all possible vs observed
 		double alg3weight=0.0; //observed vs average
 		double alg4weight=0.0; //proximity
@@ -613,7 +613,7 @@ Log.w(TAG,"nameplace latitude");
 		double alg8weight=0.0; //difference code 1
 		double alg9weight=0.0; //difference code 2
 		double alg10weight=0.0; //standard deviation
-        double alg11weight=1.0; //magnetic
+        double alg11weight=0.9; //magnetic
 
         //original well functioning block
 		//compare all observed antennas vs all possible antennas
@@ -898,19 +898,22 @@ Log.w(TAG,"nameplace latitude");
         int mdiff=100;
         if (alg11weight>0) {
             //compare current average to stored averages
-            maxscore+=300*alg11weight;
+            maxscore+=300*alg11weight*precision;
             int magx=magexpavgatPlace("awx", name);
             int magy=magexpavgatPlace("awy", name);
             int magz=magexpavgatPlace("awz", name);
-            score+=(100-Math.abs(WalktoneScanner.mSumGeomagnetic_W_avg[0]-magx))*alg11weight*precision;
-            score+=(100-Math.abs(WalktoneScanner.mSumGeomagnetic_W_avg[1]-magy))*alg11weight*precision;
-            score+=(100-Math.abs(WalktoneScanner.mSumGeomagnetic_W_avg[2]-magz))*alg11weight*precision;
+
+            Log.w(TAG,"score before "+score);
+            score+=(100-Math.abs((int)WalktoneScanner.mSumGeomagnetic_W_avg[0]-magx))*alg11weight*precision;
+            score+=(100-Math.abs((int)WalktoneScanner.mSumGeomagnetic_W_avg[1]-magy))*alg11weight*precision;
+            score+=(100-Math.abs((int)WalktoneScanner.mSumGeomagnetic_W_avg[2]-magz))*alg11weight*precision;
+            Log.w(TAG,"score after "+score);
 
             Log.w(TAG, "magx_e " + magx +" magy_e " + magy+ " magz_e " + magz);
-            Log.w(TAG, "magx_o " + WalktoneScanner.mSumGeomagnetic_W_avg[0] +" magy_o " + WalktoneScanner.mSumGeomagnetic_W_avg[1]+ " magz_o " + WalktoneScanner.mSumGeomagnetic_W_avg[2]);
+            Log.w(TAG, "magx_o " + (int)WalktoneScanner.mSumGeomagnetic_W_avg[0] +" magy_o " + (int)WalktoneScanner.mSumGeomagnetic_W_avg[1]+ " magz_o " + (int)WalktoneScanner.mSumGeomagnetic_W_avg[2]);
         }
 
-		if (score>0)  Log.w(TAG, score + "/" + maxscore + " match to " + name);
+		if (score>0)  Log.w(TAG, "score ration " +score + "/" + maxscore + " match to " + name);
 		if (score > ((maxscore) * threshold)) { //match
 			//trilateration implies I only need 4 antennas to locate myself in 3D, so when going on pure points
 			//I called anything that was at least a match to 4 antennas good enough for a match
