@@ -581,37 +581,74 @@ So you should read from Sensor.TYPE_ACCELEROMETER as well as from Sensor.TYPE_MA
     float[] mSumGeomagnetic_W = new float[3];
     float[] mSumGeomagnetic_W_avg = new float[3];
     int magneticcount=0;
+    //float mLinear[]=new float[3];
+    float[] padded_mGeomagnetic = new float[4];
 
+    /*
+    I finally managed to solve it! So to get acceleration vector in Earth's coordinate system you need to:
+
+_/1. get rotation matrix (float[16] so it could be used later by android.opengl.Matrix class) from SensorManager.getRotationMatrix() (using SENSOR.TYPE_GRAVITY and SENSOR.TYPE_MAGNETIC_FIELD sensors values as parameters),
+_/2. use android.opengl.Matrix.invertM() on the rotation matrix to invert it (not transpose!),
+_/3. use Sensor.TYPE_LINEAR_ACCELERATION sensor to get linear acceleration vector (in device's coord. sys.),
+4. use android.opengl.Matrix.multiplyMV() to multiply the rotation matrix by linear acceleration vector.
+And there you have it! I hope I will save some precious time for others.
+
+Thanks for Edward Falk and Ali for hints!!
+http://developer.android.com/reference/android/opengl/Matrix.html
+http://stackoverflow.com/questions/11578636/acceleration-from-devices-coordinate-system-into-absolute-coordinate-system
+add a 0 to the end of the magnetic vector
+     */
 
     public void onSensorChanged(SensorEvent event) {
         float orientation[] = new float[3];
-        float Rot[] = new float[9];
-        float I[] = new float[9];
+        float Rot[] = new float[16];
+        float I[] = new float[16];
+        float Invertm[] = new float[16];
+        float resultVec[]=new float[4];
+
 
         if (event.sensor.getType() == Sensor.TYPE_GRAVITY)
             mGravity = event.values.clone();
         if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
             mGeomagnetic = event.values.clone();
+        //nope, dont need it, i am trying to get magnetic field in world coords,  not linear acceleration
+        //if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION)
+         //   mLinear =event.values.clone();
+
         if (mGravity != null && mGeomagnetic != null) {
 
             boolean success = SensorManager.getRotationMatrix(Rot, I, mGravity, mGeomagnetic);
             if (success) {
+                boolean success2 = android.opengl.Matrix.invertM(Invertm,0,Rot,0);
+                if (success2) {
+                    padded_mGeomagnetic[0]=mGeomagnetic[0];
+                    padded_mGeomagnetic[1]=mGeomagnetic[1];
+                    padded_mGeomagnetic[2]=mGeomagnetic[2];
+                    padded_mGeomagnetic[3]=0;
+
+                    //multiplyMV(float[] resultVec, int resultVecOffset, float[] lhsMat, int lhsMatOffset, float[] rhsVec, int rhsVecOffset)
+                    android.opengl.Matrix.multiplyMV(resultVec,0,Invertm,0,padded_mGeomagnetic,0);
+                }
                 SensorManager.getOrientation(Rot, orientation);
                 //azimut = orientation[0]; // orientation contains: azimut, pitch and roll
             }
         }
 
-        if (mGravity != null && mGeomagnetic != null && event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+        if (mGravity != null && padded_mGeomagnetic != null && event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
 
             //String newstr = String.format("magnetic field\nx: %f\ny:%f\nz:%f",
             //        new Object[]{mGeomagnetic[0], mGeomagnetic[1], mGeomagnetic[2]});
 
             //newstr = newstr.concat(String.format("\norientation\nazimut: %f\npitch: %f\nroll:%f\n", orientation[0], orientation[1], orientation[2]));
 
+            /* this probably didn't work
             mGeomagnetic_W[0] = Rot[0] * mGeomagnetic[0] + Rot[1] * mGeomagnetic[1] + Rot[2] * mGeomagnetic[2];
             mGeomagnetic_W[1] = Rot[3] * mGeomagnetic[0] + Rot[4] * mGeomagnetic[1] + Rot[5] * mGeomagnetic[2];
             mGeomagnetic_W[2] = Rot[6] * mGeomagnetic[0] + Rot[7] * mGeomagnetic[1] + Rot[8] * mGeomagnetic[2];
-
+            */
+            mGeomagnetic_W[0] = resultVec[0];
+            mGeomagnetic_W[1] = resultVec[1];
+            mGeomagnetic_W[2] = resultVec[2];
             //newstr = newstr.concat(String.format("world magnetic field\nx: %f\ny:%f\nz:%f",
             //        new Object[]{mGeomagnetic_W[0], mGeomagnetic_W[1], mGeomagnetic_W[2]}));
             magneticcount++;
